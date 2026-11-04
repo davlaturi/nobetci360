@@ -391,6 +391,29 @@ function hucre(x, k, h, my, sh) {
       x.fillText(kisalt(x, m, tw - 8), cx, my + 0.5); x.textAlign = 'left';
       break;
     }
+    case 'saatSinif': {
+      // her ders bir kutucuk: koyu saat numarası + sınıf; sığmazsa ikinci satıra iner
+      if (!Array.isArray(h)) { x.font = F(12, 400); x.fillStyle = R.soluk2; x.fillText(String(h), sol, my); break; }
+      const ch = 22, ara = 5;
+      x.font = F(11.5, 700);
+      const olc = h.map((d) => { x.font = F(11.5, 700); const nw = x.measureText(String(d.saat)).width; x.font = F(11.5, 600); return { ...d, nw, w: nw + x.measureText(d.sinif).width + 24 }; });
+      const satirlar = [[]]; let sw = 0;
+      for (const d of olc) { if (sw + d.w > gen + 10 && satirlar.at(-1).length) { satirlar.push([]); sw = 0; } satirlar.at(-1).push(d); sw += d.w + ara; }
+      const top = my - (satirlar.length * ch + (satirlar.length - 1) * ara) / 2;
+      satirlar.forEach((sat, si) => {
+        let cx = sol; const cy = top + si * (ch + ara);
+        for (const d of sat) {
+          yuvarlak(x, cx, cy, d.w, ch, 6); x.fillStyle = '#F1EEE7'; x.fill();
+          x.strokeStyle = R.cizgi2; x.lineWidth = 1; x.stroke();
+          // saat numarası koyu kare içinde
+          yuvarlak(x, cx + 2, cy + 2, d.nw + 10, ch - 4, 4); x.fillStyle = R.murekkep; x.fill();
+          x.font = F(11.5, 700); x.fillStyle = '#fff'; x.textAlign = 'center'; x.fillText(String(d.saat), cx + 2 + (d.nw + 10) / 2, cy + ch / 2 + 0.5);
+          x.font = F(11.5, 600); x.fillStyle = R.murekkep; x.textAlign = 'left'; x.fillText(d.sinif, cx + d.nw + 17, cy + ch / 2 + 0.5);
+          cx += d.w + ara;
+        }
+      });
+      break;
+    }
     case 'bosluk': {
       x.fillStyle = R.cizgi2; x.beginPath(); x.arc(k.x + k.g / 2, my, 1.6, 0, Math.PI * 2); x.fill();
       break;

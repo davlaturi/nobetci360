@@ -328,12 +328,13 @@ function gorevBelgesi() {
   // 1) gelmeyenler
   const gelmeyenSatir = k.gelmeyenler.map((x) => {
     const o = M.ogretmen(durum, x.id);
-    const saatler = k.atamalar.filter((a) => a.gelmeyen === x.id).map((a) => a.saat);
+    const dersler = k.atamalar.filter((a) => a.gelmeyen === x.id).map((a) => ({ saat: a.saat, sinif: a.sinif || '?' }));
+    const saatler = dersler.map((d) => d.saat);
     return [
       { ad: ad(x.id), bas: M.basHarfler(ogrAd(x.id)), alt: M.tumGunMu(x) ? G(o?.brans || '') : `${G(o?.brans || '')} · yalnız ${M.kapsamMetni(x)}` },
       { metin: x.neden, neden: x.neden },
       saatler.length,
-      saatler.length ? saatler.map((s) => s + '.').join('  ') : '—',
+      dersler.length ? dersler : '—',
     ];
   });
 
@@ -370,12 +371,13 @@ function gorevBelgesi() {
     bloklar: [
       { tur: 'bolum', baslik: 'Gelmeyen öğretmenler', meta: `${k.gelmeyenler.length} öğretmen` },
       {
-        tur: 'tablo', satirH: 42,
+        // 5'ten fazla dersi olan varsa kutucuklar iki satıra iner
+        tur: 'tablo', satirH: gelmeyenSatir.some((s) => Array.isArray(s[3]) && s[3].length > 5) ? 62 : 44,
         sutunlar: [
-          { baslik: 'Öğretmen', gen: 2.7, tur: 'kisi' },
-          { baslik: 'Durum', gen: 1.15, tur: 'rozet' },
-          { baslik: 'Boşalan', gen: 0.85, tur: 'sayi', hiza: 'orta' },
-          { baslik: 'Ders saatleri', gen: 1.6, tur: 'soluk' },
+          { baslik: 'Öğretmen', gen: 2.15, tur: 'kisi' },
+          { baslik: 'Durum', gen: 0.95, tur: 'rozet' },
+          { baslik: 'Boşalan', gen: 0.7, tur: 'sayi', hiza: 'orta' },
+          { baslik: 'Ders saati ve sınıfı', gen: 3.4, tur: 'saatSinif' },
         ],
         satirlar: gelmeyenSatir,
       },
