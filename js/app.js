@@ -193,7 +193,9 @@ function gorevSayfasi(m) {
   const notlar = [];
   if (!nobetVar()) notlar.push(['bilgi', 'Nöbet çizelgesi yüklenmedi; görevlendirme için nöbetçi bulunamıyor.']);
   else if (!nobetciler.length) notlar.push(['bilgi', 'Bu gün için tanımlı nöbetçi yok.']);
-  for (const b of M.bosAlanlar(durum, ui.tarih, k)) notlar.push(['', `<b>${e(ad(b.id))}</b> gelmedi; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bugün boş.`]);
+  for (const b of M.bosAlanlar(durum, ui.tarih, k)) notlar.push(['', b.tumGun
+    ? `<b>${e(ad(b.id))}</b> gelmedi; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bugün boş.`
+    : `<b>${e(ad(b.id))}</b> ${e(b.kapsam)} saatlerinde yok; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bu saatlerde boş.`]);
   if (acikta) notlar.push(['hata', `${acikta} derse o saatte boş nöbetçi bulunamadı. Listeden nöbetçi olmayan boş bir öğretmen seçebilirsin.`]);
   for (const a of k.atamalar) if (a.duzeltme) notlar.push(['', e(a.duzeltme.replace(/([A-ZÇĞİÖŞÜ]{2,}(?: [A-ZÇĞİÖŞÜ.]{2,})+)/g, (m) => G(m)))]);
   // aylık yedek hatırlatması: kayıt varsa ve son yedek 30 günden eskiyse
@@ -210,9 +212,29 @@ function gorevSayfasi(m) {
       <div class="gelmeyen-liste">${k.gelmeyenler.map((x) => {
         const o = M.ogretmen(durum, x.id);
         const n = M.bosDersler(durum, ui.tarih, [x]).length;
-        return `<div class="gelmeyen" data-id="${x.id}">${kisi(o?.ad || '?', `${e(G(o?.brans || ''))}${o?.brans ? ' · ' : ''}bugün ${n} ders`, 'b')}
+        const gn = M.gunNo(ui.tarih);
+        const sabahSon = M.kurallar(durum).sabahSon;
+        const tum = M.tumGunMu(x);
+        const yok = (s) => M.o_saatteYokMu(x, s);
+        const sabahMi = !tum && x.saatler.length === sabahSon && x.saatler.every((s) => s <= sabahSon);
+        const ogleMi = !tum && x.saatler.length === M.SAAT_SAYISI - sabahSon && x.saatler.every((s) => s > sabahSon);
+        return `<div class="gelmeyen-blok" data-id="${x.id}"><div class="gelmeyen">${kisi(o?.ad || '?', tum ? `${e(G(o?.brans || ''))}${o?.brans ? ' · ' : ''}bugün ${n} ders` : `<b style="color:var(--vurgu-koyu)">Yalnız ${e(M.kapsamMetni(x))}</b> · ${n} ders boşalıyor`, 'b')}
           <label class="neden-sec">${nedenRozet(x.neden)}<select class="neden" aria-label="Neden">${M.NEDENLER.map((nd) => `<option ${nd === x.neden ? 'selected' : ''}>${nd}</option>`).join('')}</select></label>
-          <button class="btn btn-hayalet btn-ikon btn-kucuk sil" title="Listeden çıkar">${ikon('kapat')}</button></div>`;
+          <button class="btn btn-hayalet btn-ikon btn-kucuk sil" title="Listeden çıkar">${ikon('kapat')}</button></div>
+          <div class="saat-secim">
+            <div class="saat-secim-bas"><span>Hangi saatlerde yok? <span class="soluk" style="font-weight:400">Koyu kutu: yok</span></span>
+              <div class="segment kucuk-seg">
+                <button data-kapsam="tum" class="${tum ? 'secili' : ''}">Tüm gün</button>
+                <button data-kapsam="sabah" class="${sabahMi ? 'secili' : ''}">Sabah</button>
+                <button data-kapsam="ogle" class="${ogleMi ? 'secili' : ''}">Öğleden sonra</button>
+              </div></div>
+            <div class="saat-kutular">${Array.from({ length: M.SAAT_SAYISI }, (_, i) => {
+              const s = i + 1;
+              const h = o?.program?.[`${gn}-${s}`];
+              const sinif = h && h.length ? h.map((d) => d.sinif).join('/') : '';
+              return `<button class="saat-kutu ${yok(s) ? 'yok' : ''} ${sinif ? 'dersli' : ''}" data-saat="${s}" title="${yok(s) ? 'Bu saatte yok' : 'Bu saatte okulda'}"><b>${s}</b><span>${e(sinif || 'boş')}</span></button>`;
+            }).join('')}</div>
+          </div></div>`;
       }).join('') || '<p class="bos-yazi">Bugün için gelmeyen öğretmen eklenmedi. Yukarıdan adını yazarak ekleyebilirsin.</p>'}</div>
     </div></section>`;
 
@@ -265,20 +287,22 @@ function gorevSayfasi(m) {
 
   // nöbetçiler
   if (nobetciler.length) {
-    const gelmeyen = new Set(k.gelmeyenler.map((x) => x.id));
+    const gelmeyen = new Map(k.gelmeyenler.map((x) => [x.id, x]));
     const gorevSaat = {};
     for (const a of k.atamalar) if (a.gorevli) (gorevSaat[a.gorevli] ||= new Set()).add(a.saat);
-    h += `<section class="bolum"><div class="bolum-bas"><h2>Günün nöbetçileri</h2><span class="lejant"><span><i style="background:var(--yesil-acik);border:1px solid #BFDCCB"></i>Boş saat</span><span><i style="background:var(--murekkep)"></i>Görevli</span></span></div><div class="kart">`;
+    h += `<section class="bolum"><div class="bolum-bas"><h2>Günün nöbetçileri</h2><span class="lejant"><span><i style="background:var(--yesil-acik);border:1px solid #BFDCCB"></i>Boş saat</span><span><i style="background:var(--murekkep)"></i>Görevli</span><span><i style="background:var(--vurgu-acik);border:1px dashed var(--vurgu)"></i>Okulda değil</span></span></div><div class="kart">`;
     for (const n of [...nobetciler].sort((a, b) => a.alan - b.alan)) {
       const o = M.ogretmen(durum, n.id);
+      const gx = gelmeyen.get(n.id);
       const sa = [];
       for (let s = 1; s <= M.SAAT_SAYISI; s++) {
-        const cls = gorevSaat[n.id]?.has(s) ? 'gorev' : M.dersiVarMi(o, g, s) ? '' : 'bos';
+        const cls = gx && M.o_saatteYokMu(gx, s) ? 'yok' : gorevSaat[n.id]?.has(s) ? 'gorev' : M.dersiVarMi(o, g, s) ? '' : 'bos';
         sa.push(`<i class="${cls}">${s}</i>`);
       }
-      const gel = gelmeyen.has(n.id);
+      const gel = gx && M.tumGunMu(gx);
+      const kismi = gx && !gel;
       h += `<div class="nobetci ${gel ? 'gelmedi' : ''}"><div class="alan-adi">${e(G(durum.alanlar[n.alan]))}</div>
-        ${kisi(o?.ad || '?', gel ? 'Gelmedi' : `${e(G(o?.brans || ''))}${bugunGorev[n.id] ? ` · bugün ${bugunGorev[n.id]} görev` : ''}`, 'k')}
+        ${kisi(o?.ad || '?', gel ? 'Gelmedi' : kismi ? `${e(M.kapsamMetni(gx))} yok${bugunGorev[n.id] ? ` · bugün ${bugunGorev[n.id]} görev` : ''}` : `${e(G(o?.brans || ''))}${bugunGorev[n.id] ? ` · bugün ${bugunGorev[n.id]} görev` : ''}`, 'k')}
         <div class="saatler">${sa.join('')}</div></div>`;
     }
     h += `</div></section>`;
@@ -297,7 +321,7 @@ function gorevBelgesi() {
     const o = M.ogretmen(durum, x.id);
     const saatler = k.atamalar.filter((a) => a.gelmeyen === x.id).map((a) => a.saat);
     return [
-      { ad: ad(x.id), bas: M.basHarfler(ogrAd(x.id)), alt: G(o?.brans || '') },
+      { ad: ad(x.id), bas: M.basHarfler(ogrAd(x.id)), alt: M.tumGunMu(x) ? G(o?.brans || '') : `${G(o?.brans || '')} · yalnız ${M.kapsamMetni(x)}` },
       { metin: x.neden, neden: x.neden },
       saatler.length,
       saatler.length ? saatler.map((s) => s + '.').join('  ') : '—',
@@ -356,7 +380,9 @@ function gorevBelgesi() {
         ],
         satirlar: gorevSatir,
       },
-      { tur: 'notlar', liste: M.bosAlanlar(durum, ui.tarih, k).map((b) => `${G(durum.alanlar[b.alan])} nöbet alanı bugün boş (${ad(b.id)} gelmedi).`) },
+      { tur: 'notlar', liste: M.bosAlanlar(durum, ui.tarih, k).map((b) => b.tumGun
+        ? `${G(durum.alanlar[b.alan])} nöbet alanı bugün boş (${ad(b.id)} gelmedi).`
+        : `${G(durum.alanlar[b.alan])} nöbet alanı ${b.kapsam} saatlerinde boş (${ad(b.id)} yok).`) },
     ],
   };
 }
@@ -408,8 +434,27 @@ function gorevOlaylari(m) {
     ara.addEventListener('blur', () => setTimeout(() => (liste.hidden = true), 150));
   }
 
-  $$('.gelmeyen', m).forEach((satir) => {
+  $$('.gelmeyen-blok', m).forEach((satir) => {
     const id = satir.dataset.id;
+    const kayitX = () => kayitAl().gelmeyenler.find((x) => x.id === id);
+    const saatleriYaz = (liste) => {
+      const x = kayitX();
+      const s = [...new Set(liste)].filter((n) => n >= 1 && n <= M.SAAT_SAYISI).sort((a, b) => a - b);
+      if (!s.length) { bildir('En az bir saat seçili olmalı; öğretmen geldiyse listeden çıkar.'); return; }
+      if (s.length >= M.SAAT_SAYISI) delete x.saatler; else x.saatler = s;
+      kayitGuncelle(); ciz();
+    };
+    $$('[data-kapsam]', satir).forEach((b) => (b.onclick = () => {
+      const son = M.kurallar(durum).sabahSon;
+      const tum = Array.from({ length: M.SAAT_SAYISI }, (_, i) => i + 1);
+      saatleriYaz(b.dataset.kapsam === 'sabah' ? tum.filter((s) => s <= son) : b.dataset.kapsam === 'ogle' ? tum.filter((s) => s > son) : tum);
+    }));
+    $$('[data-saat]', satir).forEach((b) => (b.onclick = () => {
+      const x = kayitX();
+      const s = +b.dataset.saat;
+      const simdi = M.tumGunMu(x) ? Array.from({ length: M.SAAT_SAYISI }, (_, i) => i + 1) : [...x.saatler];
+      saatleriYaz(simdi.includes(s) ? simdi.filter((n) => n !== s) : [...simdi, s]);
+    }));
     $('.neden', satir).onchange = (ev) => { kayitAl().gelmeyenler.find((x) => x.id === id).neden = ev.target.value; kaydet(); ciz(); };
     $('.sil', satir).onclick = () => {
       const k = kayitAl(); k.gelmeyenler = k.gelmeyenler.filter((x) => x.id !== id);
@@ -432,7 +477,7 @@ function gorevOlaylari(m) {
     const k = kayitAl();
     let t = `*Görevlendirme · ${uzunTarih(ui.tarih)} ${M.GUN_ADLARI[M.gunNo(ui.tarih) - 1]}*\n`;
     if (durum.okul) t += `${G(durum.okul)}\n`;
-    t += `\n*Gelmeyen öğretmenler*\n${k.gelmeyenler.map((x) => `• ${ad(x.id)} — ${x.neden}`).join('\n')}\n`;
+    t += `\n*Gelmeyen öğretmenler*\n${k.gelmeyenler.map((x) => `• ${ad(x.id)} — ${x.neden}${M.tumGunMu(x) ? '' : ` (${M.kapsamMetni(x)})`}`).join('\n')}\n`;
     const gruplar = new Map();
     for (const a of k.atamalar) {
       const id = a.gorevli || '';
@@ -488,7 +533,7 @@ function nobetSayfasi(m) {
   durum.alanlar.forEach((alan, ai) => {
     h += `<tr><td class="ilk">${e(G(alan))}</td>${gunler.map((t) => {
       const n = M.gununNobetcileri(durum, t).find((x) => x.alan === ai);
-      const gel = n && durum.kayitlar[t]?.gelmeyenler?.some((x) => x.id === n.id);
+      const gel = n && durum.kayitlar[t]?.gelmeyenler?.some((x) => x.id === n.id && M.tumGunMu(x));
       return `<td class="${t === bugun ? 'bugun-sutun' : ''}">${n ? `<div class="kisi" ${gel ? 'title="Gelmedi"' : ''}><div class="ad" style="${gel ? 'text-decoration:line-through;color:var(--soluk)' : ''}">${e(ad(n.id))}</div></div>` : '<span class="bos-hucre">—</span>'}</td>`;
     }).join('')}</tr>`;
   });

@@ -1,5 +1,5 @@
 ﻿// NÃ¶betÃ§i360 â€” Ã§evrimdÄ±ÅŸÄ± Ã§alÄ±ÅŸma: Ã¶nce aÄŸ (gÃ¼ncel sÃ¼rÃ¼m), aÄŸ yoksa Ã¶nbellek.
-const SURUM = 'nobetci360-v2.4.0';
+const SURUM = 'nobetci360-v2.5.0';
 const DOSYALAR = ['./', 'index.html', 'css/stil.css', 'js/app.js', 'js/motor.js', 'js/pdfoku.js', 'js/resim.js', 'js/ikonlar.js',
   'lib/pdf.min.mjs', 'lib/pdf.worker.min.mjs', 'manifest.webmanifest',
   'ikon/logo.svg', 'ikon/ikon-180.png', 'ikon/ikon-192.png', 'ikon/ikon-512.png',

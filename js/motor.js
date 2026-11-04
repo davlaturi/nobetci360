@@ -222,15 +222,45 @@ export function yarim(saat, sabahSon = SABAH_SON) {
 }
 
 // Gelmeyen öğretmenlerin boşalan dersleri
+// ---------- kısmi devamsızlık
+// gelmeyen kaydı: {id, neden, saatler?}  saatler yoksa (ya da 8 saatin hepsiyse) tüm gün gelmemiştir.
+export function tumGunMu(x) {
+  return !x.saatler || x.saatler.length >= SAAT_SAYISI;
+}
+export function o_saatteYokMu(x, saat) {
+  return tumGunMu(x) || x.saatler.includes(saat);
+}
+// Belirli saatte okulda olmayan öğretmenler
+export function saatteYoklar(kayit, saat) {
+  return new Set(kayit.gelmeyenler.filter((x) => o_saatteYokMu(x, saat)).map((x) => x.id));
+}
+// [1,2,3,6] → "1–3, 6."
+export function saatAraligi(saatler) {
+  const s = [...saatler].sort((a, b) => a - b);
+  const parca = [];
+  for (let i = 0; i < s.length; i++) {
+    let j = i;
+    while (j + 1 < s.length && s[j + 1] === s[j] + 1) j++;
+    parca.push(j > i ? `${s[i]}–${s[j]}` : `${s[i]}`);
+    i = j;
+  }
+  return parca.join(', ') + '.';
+}
+export function kapsamMetni(x) {
+  return tumGunMu(x) ? 'Tüm gün' : `${saatAraligi(x.saatler)} ders`;
+}
+
 export function bosDersler(durum, tarih, gelmeyenler) {
   const g = gunNo(tarih);
   const out = [];
-  for (const { id } of gelmeyenler) {
+  for (const x of gelmeyenler) {
+    const { id } = x;
     const o = ogretmen(durum, id);
     if (!o) continue;
     for (let s = 1; s <= SAAT_SAYISI; s++) {
       const h = o.program[`${g}-${s}`];
       if (!h || !h.length) continue;
+      if (!o_saatteYokMu(x, s)) continue; // o saatte okulda, dersine giriyor
       out.push({ saat: s, gelmeyen: id, sinif: h.map((d) => d.sinif).filter(Boolean).join(' / '), ders: [...new Set(h.map((d) => d.ders))].join(' / ') });
     }
   }
@@ -256,8 +286,8 @@ export function gorevSayilari(durum, haric = null, aralik = null) {
 // O saatte görev verilebilecek öğretmenler
 export function uygunlar(durum, tarih, kayit, saat, atamaIndex = -1) {
   const g = gunNo(tarih);
-  const gelmeyen = new Set(kayit.gelmeyenler.map((x) => x.id));
-  const meşgul = new Set(kayit.atamalar.filter((a, i) => i !== atamaIndex && a.saat === saat && a.gorevli).map((a) => a.gorevli));
+  const gelmeyen = saatteYoklar(kayit, saat); // yalnız o saatte okulda olmayanlar
+  const meşgul =new Set(kayit.atamalar.filter((a, i) => i !== atamaIndex && a.saat === saat && a.gorevli).map((a) => a.gorevli));
   const nobetci = gununNobetcileri(durum, tarih).map((n) => n.id);
   const bosMu = (id) => !gelmeyen.has(id) && !meşgul.has(id) && !dersiVarMi(ogretmen(durum, id), g, saat);
   const nob = nobetci.filter(bosMu);
@@ -301,14 +331,13 @@ export function otomatikAta(durum, tarih, kayit) {
   // programı değişip o saatte dersi çıktı ya da aynı saatte başka bir derse de elle yazıldı.
   // Bu durumda seçim bırakılır, ders kurala göre yeniden atanır ve not düşülür.
   const g = gunNo(tarih);
-  const gelmeyen = new Set(kayit.gelmeyenler.map((x) => x.id));
   const saatteDolu = new Set();
   for (const a of kayit.atamalar) {
     delete a.duzeltme;
     if (!a.elle || !a.gorevli) continue;
     const o = ogretmen(durum, a.gorevli);
     const neden = !o ? 'listede yok'
-      : gelmeyen.has(a.gorevli) ? 'kendisi de gelmedi'
+      : saatteYoklar(kayit, a.saat).has(a.gorevli) ? 'o saatte kendisi de okulda değil'
       : dersiVarMi(o, g, a.saat) ? 'o saatte kendi dersi var'
       : saatteDolu.has(`${a.saat}|${a.gorevli}`) ? 'aynı saatte başka bir sınıfa yazılı'
       : null;
@@ -330,9 +359,12 @@ export function otomatikAta(durum, tarih, kayit) {
 }
 
 // Gelmeyen bir nöbetçinin boş kalan alanı
+// Gelmeyen bir nöbetçinin boş kalan alanı (kısmi devamsızlıkta hangi saatlerde boş olduğu da döner)
 export function bosAlanlar(durum, tarih, kayit) {
-  const gelmeyen = new Set(kayit.gelmeyenler.map((x) => x.id));
-  return gununNobetcileri(durum, tarih).filter((n) => gelmeyen.has(n.id));
+  const gelmeyen = new Map(kayit.gelmeyenler.map((x) => [x.id, x]));
+  return gununNobetcileri(durum, tarih)
+    .filter((n) => gelmeyen.has(n.id))
+    .map((n) => ({ ...n, tumGun: tumGunMu(gelmeyen.get(n.id)), kapsam: kapsamMetni(gelmeyen.get(n.id)) }));
 }
 
 // ---------- aylık rapor

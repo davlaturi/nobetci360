@@ -267,6 +267,30 @@ textarea.alan { padding: 10px 12px; min-height: 96px; line-height: 1.5; }
 .gelmeyen { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-top: 1px solid var(--cizgi); }
 .gelmeyen:first-child { border-top: 0; }
 .gelmeyen .kisi { flex: 1; }
+.gelmeyen-blok { border-top: 1px solid var(--cizgi); padding-bottom: 12px; }
+.gelmeyen-blok:first-child { border-top: 0; }
+.gelmeyen-blok .gelmeyen { border-top: 0; }
+.saat-secim { margin-left: 52px; }
+.saat-secim-bas { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 12.5px; color: var(--soluk); font-weight: 500; }
+.kucuk-seg button { padding: 5px 10px; font-size: 12.5px; }
+.saat-kutular { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; }
+.saat-kutu {
+  border: 1px solid var(--cizgi-2); background: var(--yuzey); border-radius: 9px; padding: 5px 0 6px; min-height: 46px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; transition: all var(--hiz); color: var(--murekkep-3);
+}
+.saat-kutu b { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.saat-kutu span { font-size: 10.5px; font-weight: 600; color: var(--soluk-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; padding: 0 2px; }
+.saat-kutu.dersli span { color: var(--murekkep-3); }
+.saat-kutu.yok { background: var(--murekkep); border-color: var(--murekkep); color: #fff; }
+.saat-kutu.yok span { color: #C9CFD9; }
+.saat-kutu.yok.dersli span { color: #FFB9A8; }
+.saatler i.yok { background: var(--vurgu-acik); color: var(--vurgu-koyu); outline: 1px dashed var(--vurgu); outline-offset: -1px; }
+@media (max-width: 899px) {
+  .saat-secim { margin-left: 0; }
+  .saat-kutular { gap: 4px; }
+  .saat-kutu { min-height: 44px; border-radius: 8px; }
+  .saat-kutu span { font-size: 9.5px; }
+}
 .bos-yazi { color: var(--soluk); font-size: 14px; padding: 12px 4px 4px; margin: 0; }
 
 /* ---------- görev listesi */

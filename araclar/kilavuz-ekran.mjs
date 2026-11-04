@@ -13,6 +13,7 @@ const html = index.replace('<script type="module" src="js/app.js"></script>', `<
 const q = new URLSearchParams(location.search);
 const d = await (await fetch('/test/ornek-durum.json')).json();
 d.sonYedek = '2026-11-04';
+if (q.get('kismi')) d.kayitlar['2026-11-06'].gelmeyenler[1].saatler = [2, 3, 4];
 d.imza = { unvan: 'Müdür Yardımcısı', ad: '' };
 localStorage.setItem('nobet-gorevlendirme-v1', JSON.stringify(d));
 await import('/js/app.js');
@@ -37,8 +38,10 @@ const ekranlar = [
   ['nobet', 'sayfa=nobet'],
   ['veri-yedek', 'sayfa=veri&hedef=%23yedek-al'],
   ['veri-ust', 'sayfa=veri'],
+  ['kismi', 'sayfa=gorev&kismi=1&hedef=.gelmeyen-kart'],
 ];
-for (const [ad, sorgu] of ekranlar) {
+const sadece = process.argv[2];
+for (const [ad, sorgu] of ekranlar.filter(([a]) => !sadece || a === sadece)) {
   const hedef = new URL(`kilavuz/ekran-${ad}.png`, kok);
   const gecici = join(tmpdir(), `nb-ekran-${ad}.png`); // Edge boşluklu yola yazamıyor
   if (existsSync(gecici)) rmSync(gecici);
