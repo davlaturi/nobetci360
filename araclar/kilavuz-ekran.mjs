@@ -14,10 +14,12 @@ const q = new URLSearchParams(location.search);
 const d = await (await fetch('/test/ornek-durum.json')).json();
 d.sonYedek = '2026-11-04';
 if (q.get('kismi')) d.kayitlar['2026-11-06'].gelmeyenler[1].saatler = [2, 3, 4];
+// derssiz: Çarşamba dersi olmayan öğretmen gelmeyen girilmiş
+if (q.get('derssiz')) d.kayitlar['2026-11-04'] = { gelmeyenler: [d.kayitlar['2026-11-06'].gelmeyenler[0]], atamalar: [] };
 d.imza = { unvan: 'Müdür Yardımcısı', ad: '' };
 localStorage.setItem('nobet-gorevlendirme-v1', JSON.stringify(d));
 await import('/js/app.js');
-const N = window.__nobetci; N.ui.tarih = '2026-11-06'; N.ui.hafta = '2026-11-02'; N.ui.ay = '2026-11';
+const N = window.__nobetci; N.ui.tarih = q.get('tarih') || '2026-11-06'; N.ui.hafta = '2026-11-02'; N.ui.ay = '2026-11';
 document.querySelector('#menu-alt [data-sayfa=' + (q.get('sayfa') || 'gorev') + ']').click();
 await new Promise((r) => setTimeout(r, 300));
 if (q.get('hedef')) {
@@ -39,6 +41,8 @@ const ekranlar = [
   ['veri-yedek', 'sayfa=veri&hedef=%23yedek-al'],
   ['veri-ust', 'sayfa=veri'],
   ['kismi', 'sayfa=gorev&kismi=1&hedef=.gelmeyen-kart'],
+  ['nobetciler', 'sayfa=gorev&hedef=.nobetci-lejant'],
+  ['derssiz', 'sayfa=gorev&derssiz=1&tarih=2026-11-04'],
 ];
 const sadece = process.argv[2];
 for (const [ad, sorgu] of ekranlar.filter(([a]) => !sadece || a === sadece)) {

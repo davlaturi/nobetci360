@@ -185,7 +185,7 @@ function gorevSayfasi(m) {
   h += `<div class="ozet">
     <div><div class="s">${k.gelmeyenler.length}</div><div class="e">Gelmeyen öğretmen</div></div>
     <div><div class="s">${k.atamalar.length}</div><div class="e">Boşalan ders</div></div>
-    <div><div class="s">${k.atamalar.length - acikta}</div><div class="e">Görevlendirilen</div></div>
+    <div class="${k.atamalar.length ? 'tikla' : ''}" data-kaydir="gorev-bolum"><div class="s">${k.atamalar.length - acikta}</div><div class="e">Görevlendirilen${k.atamalar.length ? ' ›' : ''}</div></div>
     <div class="${acikta ? 'kirmizi' : k.atamalar.length ? 'yesil' : ''}"><div class="s">${acikta}</div><div class="e">Açıkta kalan</div></div>
   </div>`;
 
@@ -197,6 +197,9 @@ function gorevSayfasi(m) {
     ? `<b>${e(ad(b.id))}</b> gelmedi; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bugün boş.`
     : `<b>${e(ad(b.id))}</b> ${e(b.kapsam)} saatlerinde yok; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bu saatlerde boş.`]);
   if (acikta) notlar.push(['hata', `${acikta} derse o saatte boş nöbetçi bulunamadı. Listeden nöbetçi olmayan boş bir öğretmen seçebilirsin.`]);
+  // dersi olmayan gelmeyenler: görevlendirme gerekmediğini açıkça söyle
+  const derssiz = k.gelmeyenler.filter((x) => !M.bosDersler(durum, ui.tarih, [x]).length);
+  if (derssiz.length) notlar.push(['bilgi', `${derssiz.map((x) => `<b>${e(ad(x.id))}</b>`).join(', ')} için ${M.tumGunMu(derssiz[0]) && derssiz.length === 1 ? 'bugün' : 'seçilen saatlerde'} ders yok; görevlendirme gerekmiyor.${M.gunNo(ui.tarih) <= 5 ? ' Başka bir gün mü olacaktı? Yukarıdaki gün düğmelerinden doğru günü seç.' : ''}`]);
   for (const a of k.atamalar) if (a.duzeltme) notlar.push(['', e(a.duzeltme.replace(/([A-ZÇĞİÖŞÜ]{2,}(?: [A-ZÇĞİÖŞÜ.]{2,})+)/g, (m) => G(m)))]);
   // aylık yedek hatırlatması: kayıt varsa ve son yedek 30 günden eskiyse
   const gecen = durum.sonYedek ? Math.round((M.tarihNesne(BUGUN()) - M.tarihNesne(durum.sonYedek)) / 864e5) : Infinity;
@@ -242,7 +245,7 @@ function gorevSayfasi(m) {
   if (k.atamalar.length) {
     const gecmis = M.adaletSayaci(durum, ui.tarih);
     const esn = M.ESNEKLIK_SECENEKLERI.find((x) => x.deger === kur.esneklik);
-    h += `<section class="bolum"><div class="bolum-bas"><h2>Görevlendirme</h2><span class="meta">Dağıtım: ${e(esn ? esn.ad : '')}${kur.gunlukSinir ? ` · günde en çok ${kur.gunlukSinir}` : ''}</span></div><div class="kart">`;
+    h += `<section class="bolum" id="gorev-bolum"><div class="bolum-bas"><h2>Görevlendirme</h2><span class="meta">Dağıtım: ${e(esn ? esn.ad : '')}${kur.gunlukSinir ? ` · günde en çok ${kur.gunlukSinir}` : ''}</span></div><div class="kart">`;
     let son = '';
     k.atamalar.forEach((a, i) => {
       const y = M.yarim(a.saat, kur.sabahSon);
@@ -288,21 +291,27 @@ function gorevSayfasi(m) {
   // nöbetçiler
   if (nobetciler.length) {
     const gelmeyen = new Map(k.gelmeyenler.map((x) => [x.id, x]));
-    const gorevSaat = {};
-    for (const a of k.atamalar) if (a.gorevli) (gorevSaat[a.gorevli] ||= new Set()).add(a.saat);
-    h += `<section class="bolum"><div class="bolum-bas"><h2>Günün nöbetçileri</h2><span class="lejant"><span><i style="background:var(--yesil-acik);border:1px solid #BFDCCB"></i>Boş saat</span><span><i style="background:var(--murekkep)"></i>Görevli</span><span><i style="background:var(--vurgu-acik);border:1px dashed var(--vurgu)"></i>Okulda değil</span></span></div><div class="kart">`;
+    const gorevSaat = {}; // id -> {saat: girilecek sınıf}
+    for (const a of k.atamalar) if (a.gorevli) (gorevSaat[a.gorevli] ||= {})[a.saat] = a.sinif || '?';
+    h += `<section class="bolum"><div class="bolum-bas"><h2>Günün nöbetçileri</h2></div>
+      <div class="lejant nobetci-lejant"><span><i class="l-bos"></i>Boş</span><span><i class="l-ders"></i>Kendi dersi</span><span><i class="l-gorev"></i>Görevli (gireceği sınıf)</span><span><i class="l-yok"></i>Okulda değil</span></div><div class="kart">`;
     for (const n of [...nobetciler].sort((a, b) => a.alan - b.alan)) {
       const o = M.ogretmen(durum, n.id);
       const gx = gelmeyen.get(n.id);
       const sa = [];
       for (let s = 1; s <= M.SAAT_SAYISI; s++) {
-        const cls = gx && M.o_saatteYokMu(gx, s) ? 'yok' : gorevSaat[n.id]?.has(s) ? 'gorev' : M.dersiVarMi(o, g, s) ? '' : 'bos';
-        sa.push(`<i class="${cls}">${s}</i>`);
+        const kendi = o?.program?.[`${g}-${s}`];
+        let cls, etiket;
+        if (gx && M.o_saatteYokMu(gx, s)) { cls = 'yok'; etiket = 'yok'; }
+        else if (gorevSaat[n.id]?.[s]) { cls = 'gorev'; etiket = gorevSaat[n.id][s]; }
+        else if (kendi && kendi.length) { cls = 'ders'; etiket = kendi.map((d) => d.sinif).join('/'); }
+        else { cls = 'bos'; etiket = 'boş'; }
+        sa.push(`<i class="${cls}"><b>${s}</b><small>${e(etiket)}</small></i>`);
       }
       const gel = gx && M.tumGunMu(gx);
       const kismi = gx && !gel;
       h += `<div class="nobetci ${gel ? 'gelmedi' : ''}"><div class="alan-adi">${e(G(durum.alanlar[n.alan]))}</div>
-        ${kisi(o?.ad || '?', gel ? 'Gelmedi' : kismi ? `${e(M.kapsamMetni(gx))} yok${bugunGorev[n.id] ? ` · bugün ${bugunGorev[n.id]} görev` : ''}` : `${e(G(o?.brans || ''))}${bugunGorev[n.id] ? ` · bugün ${bugunGorev[n.id]} görev` : ''}`, 'k')}
+        ${kisi(o?.ad || '?', gel ? 'Gelmedi' : kismi ? `${e(M.kapsamMetni(gx))} yok${bugunGorev[n.id] ? ` · <b class="gorev-say">${bugunGorev[n.id]} görev</b>` : ''}` : `${e(G(o?.brans || ''))}${bugunGorev[n.id] ? ` · <b class="gorev-say">${bugunGorev[n.id]} görev</b>` : ''}`, 'k')}
         <div class="saatler">${sa.join('')}</div></div>`;
     }
     h += `</div></section>`;
@@ -394,6 +403,7 @@ function gorevOlaylari(m) {
     ui.tarih = t; ciz();
   };
   $$('[data-tarih]', m).forEach((b) => (b.onclick = () => tarihSec(b.dataset.tarih)));
+  $$('.tikla[data-kaydir]', m).forEach((b) => (b.onclick = () => document.getElementById(b.dataset.kaydir)?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
   $('#g-geri', m).onclick = () => tarihSec(M.gunEkle(ui.tarih, -7));
   $('#g-ileri', m).onclick = () => tarihSec(M.gunEkle(ui.tarih, 7));
   $('#g-tarih', m).onchange = (ev) => tarihSec(ev.target.value);
@@ -419,7 +429,10 @@ function gorevOlaylari(m) {
     const ekle = (id) => {
       kayitAl(true).gelmeyenler.push({ id, neden: 'Raporlu' });
       kayitGuncelle(); ciz();
-      setTimeout(() => $('#ara')?.focus(), 0);
+      const n = M.bosDersler(durum, ui.tarih, [{ id }]).length;
+      bildir(n ? `${ad(id)}: ${n} ders dağıtıldı — aşağıda “Görevlendirme” bölümünde` : `${ad(id)}: bugün dersi yok, görevlendirme gerekmiyor`, 3800);
+      // telefonda klavye açılıp ekranı kapatmasın diye arama kutusuna yalnız masaüstünde odaklan
+      if (matchMedia('(pointer: fine)').matches) setTimeout(() => $('#ara')?.focus(), 0);
     };
     ara.addEventListener('input', goster);
     ara.addEventListener('keydown', (ev) => {
