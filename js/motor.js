@@ -297,6 +297,26 @@ export function otomatikAta(durum, tarih, kayit) {
     const e = eski.get(`${b.saat}|${b.gelmeyen}`);
     return { ...b, gorevli: e && e.elle ? e.gorevli : null, elle: !!(e && e.elle) };
   });
+  // Elle seçimler geçerliliğini yitirmiş olabilir: seçilen kişi sonradan gelmeyenlere eklendi,
+  // programı değişip o saatte dersi çıktı ya da aynı saatte başka bir derse de elle yazıldı.
+  // Bu durumda seçim bırakılır, ders kurala göre yeniden atanır ve not düşülür.
+  const g = gunNo(tarih);
+  const gelmeyen = new Set(kayit.gelmeyenler.map((x) => x.id));
+  const saatteDolu = new Set();
+  for (const a of kayit.atamalar) {
+    delete a.duzeltme;
+    if (!a.elle || !a.gorevli) continue;
+    const o = ogretmen(durum, a.gorevli);
+    const neden = !o ? 'listede yok'
+      : gelmeyen.has(a.gorevli) ? 'kendisi de gelmedi'
+      : dersiVarMi(o, g, a.saat) ? 'o saatte kendi dersi var'
+      : saatteDolu.has(`${a.saat}|${a.gorevli}`) ? 'aynı saatte başka bir sınıfa yazılı'
+      : null;
+    if (neden) {
+      a.duzeltme = `${a.saat}. ders ${a.sinif || ''}: elle seçilen ${o ? o.ad : 'öğretmen'} artık uygun değil (${neden}); yeniden atandı.`;
+      a.elle = false; a.gorevli = null;
+    } else saatteDolu.add(`${a.saat}|${a.gorevli}`);
+  }
   const bugun = {};
   for (const a of kayit.atamalar) if (a.gorevli) bugun[a.gorevli] = (bugun[a.gorevli] || 0) + 1;
   kayit.atamalar.forEach((a, i) => {

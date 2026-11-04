@@ -195,6 +195,7 @@ function gorevSayfasi(m) {
   else if (!nobetciler.length) notlar.push(['bilgi', 'Bu gün için tanımlı nöbetçi yok.']);
   for (const b of M.bosAlanlar(durum, ui.tarih, k)) notlar.push(['', `<b>${e(ad(b.id))}</b> gelmedi; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bugün boş.`]);
   if (acikta) notlar.push(['hata', `${acikta} derse o saatte boş nöbetçi bulunamadı. Listeden nöbetçi olmayan boş bir öğretmen seçebilirsin.`]);
+  for (const a of k.atamalar) if (a.duzeltme) notlar.push(['', e(a.duzeltme.replace(/([A-ZÇĞİÖŞÜ]{2,}(?: [A-ZÇĞİÖŞÜ.]{2,})+)/g, (m) => G(m)))]);
   // aylık yedek hatırlatması: kayıt varsa ve son yedek 30 günden eskiyse
   const gecen = durum.sonYedek ? Math.round((M.tarihNesne(BUGUN()) - M.tarihNesne(durum.sonYedek)) / 864e5) : Infinity;
   if (Object.keys(durum.kayitlar).length && gecen >= 30) {
