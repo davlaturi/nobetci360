@@ -555,7 +555,7 @@ function nobetSayfasi(m) {
   h += `</tbody></table></div>
     <div class="gun-kartlari">${gunler.map((t, i) => {
       const liste = M.gununNobetcileri(durum, t).sort((a, b) => a.alan - b.alan);
-      return `<div class="gun-karti ${t === bugun ? 'bugun' : ''}"><div class="gun-karti-bas">${M.GUN_ADLARI[i]} <span>${gunAy(t)}${t === bugun ? ' · bugün' : ''}</span></div>
+      return `<div class="gun-karti ${t === bugun ? 'bugun' : ''}"><div class="gun-karti-bas">${M.GUN_ADLARI[i]} <span>${gunAy(t)}</span>${t === bugun ? '<em>BUGÜN</em>' : ''}</div>
         ${liste.map((n) => `<div class="gun-karti-satir"><span class="alan-adi">${e(G(durum.alanlar[n.alan]))}</span>${kisi(ogrAd(n.id), '', 'k')}</div>`).join('') || '<div class="gun-karti-satir soluk">Nöbetçi yok</div>'}</div>`;
     }).join('')}</div>
     <div class="alt-cubuk"><span class="soluk kucuk-yazi">Her hafta herkes bir sonraki alana geçer; son alandaki ilk alana döner.</span>

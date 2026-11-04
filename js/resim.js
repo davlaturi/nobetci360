@@ -350,10 +350,15 @@ function tabloCiz(x, b) {
       x.font = F(10.5, 600); x.fillStyle = R.murekkep3; x.fillText(k.alt, tx, top + 41);
       x.textAlign = 'left';
     } else if (k.alt) {
-      // gün + tarih
-      x.textAlign = hiza === 'orta' ? 'center' : hiza === 'sag' ? 'right' : 'left';
-      x.font = F(14, 700); x.fillStyle = R.murekkep; x.fillText(k.baslik, tx, top + 19);
-      x.font = F(11, 600); x.fillStyle = R.vurguKoyu; x.fillText(k.alt, tx, top + 37);
+      // gün + tarih: sütun başında koyu kutu, beyaz gün adı, açık kiremit tarih
+      const bx = k.x + 5, bw = k.g - 10, by = top + 6, bh = BH - 12;
+      yuvarlak(x, bx, by, bw, bh, 8);
+      const zg = x.createLinearGradient(bx, by, bx + bw, by + bh);
+      zg.addColorStop(0, '#15253D'); zg.addColorStop(1, '#22385A');
+      x.fillStyle = zg; x.fill();
+      x.textAlign = 'center';
+      x.font = F(14.5, 700); x.fillStyle = '#fff'; x.fillText(k.baslik, bx + bw / 2, by + bh / 2 - 7);
+      x.font = F(11, 600); x.fillStyle = '#F6B3A3'; x.fillText(k.alt, bx + bw / 2, by + bh / 2 + 10);
       x.textAlign = 'left';
     } else {
       x.font = F(10, 700); x.fillStyle = R.murekkep3;

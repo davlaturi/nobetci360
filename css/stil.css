@@ -382,14 +382,15 @@ table.tablo { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 .tablo th.bugun-sutun { color: var(--vurgu-koyu); background: #FAECE6; }
 .tablo .bos-hucre { color: var(--soluk-2); }
 .tablo th .gun-alt { display: block; font-size: 12px; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--vurgu-koyu); margin-top: 2px; }
-.nobet-tablo th:not(.ilk) { font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--murekkep); font-weight: 700; background: #F1EEE7; }
+.nobet-tablo th:not(.ilk) { font-size: 15px; letter-spacing: 0; text-transform: none; color: #fff; font-weight: 700; background: linear-gradient(135deg, #15253D, #22385A); border-bottom-color: #15253D; }
+.nobet-tablo th:not(.ilk) .gun-alt { color: #F6B3A3; }
+.nobet-tablo th.bugun-sutun { background: linear-gradient(135deg, #B83A20, #D9482B) !important; }
+.nobet-tablo th.bugun-sutun .gun-alt { color: #FFE3DA; }
 .nobet-tablo th.ilk { background: #F1EEE7; }
 .nobet-tablo td.ilk { background: #F8F6F1; font-weight: 700; white-space: nowrap; min-width: 150px; }
 .nobet-tablo td .kisi .ad { font-size: 14px; }
 .nobet-tablo td { padding-left: 12px; padding-right: 12px; }
 .nobet-tablo td.ilk::before { content: ""; display: inline-block; width: 3px; height: 14px; border-radius: 2px; background: var(--vurgu); margin-right: 9px; vertical-align: -2px; }
-.gun-karti-bas { font-size: 16px !important; font-weight: 700 !important; }
-.gun-karti-bas span { color: var(--vurgu-koyu) !important; font-weight: 600 !important; }
 .gun-karti-satir .alan-adi { color: var(--murekkep) !important; font-weight: 700 !important; }
 .cubuk-grafik { display: flex; align-items: center; gap: 10px; }
 .cubuk-grafik .cubuk { flex: 1; height: 8px; border-radius: 4px; background: var(--kagit-2); overflow: hidden; display: flex; min-width: 90px; }
@@ -415,11 +416,16 @@ table.tablo { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 @media (max-width: 899px) {
   .nobet-tablo { display: none; }
   .gun-kartlari { display: block; }
-  .gun-karti { border-top: 1px solid var(--cizgi); padding: 4px 0 6px; }
-  .gun-karti:first-child { border-top: 0; }
-  .gun-karti-bas { padding: 12px 14px 6px; font-weight: 600; font-size: 15px; }
-  .gun-karti-bas span { color: var(--soluk); font-weight: 400; font-size: 13px; margin-left: 4px; }
-  .gun-karti.bugun .gun-karti-bas span { color: var(--vurgu-koyu); font-weight: 500; }
+  .gun-karti { padding: 0 0 8px; }
+  .gun-karti + .gun-karti { border-top: 1px solid var(--cizgi); }
+  /* gün başlığı: koyu şerit, beyaz gün adı, açık kiremit tarih */
+  .gun-karti-bas {
+    display: flex; align-items: center; gap: 10px; margin: 10px 10px 6px; padding: 10px 14px; border-radius: 12px;
+    background: linear-gradient(135deg, #15253D, #22385A); color: #fff; font-size: 17px; font-weight: 700; letter-spacing: -.01em;
+  }
+  .gun-karti-bas span { color: #F6B3A3; font-size: 14px; font-weight: 600; }
+  .gun-karti-bas em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .08em; background: var(--vurgu); color: #fff; padding: 3px 8px; border-radius: 99px; }
+  .gun-karti.bugun .gun-karti-bas { box-shadow: 0 0 0 2px var(--vurgu); }
   .gun-karti-satir { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 10px; padding: 6px 14px; }
   .gun-karti-satir .alan-adi { font-size: 13px; color: var(--soluk); font-weight: 500; }
 }
