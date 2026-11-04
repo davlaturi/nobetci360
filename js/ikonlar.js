@@ -17,7 +17,8 @@ function halkaDilimleri(cx, cy, r) {
   }
   return out;
 }
-const SAYDAMLIK = [1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.34, 0.55];
+// Koyu zeminde seçilebilsin diye gri dilimler belirgin; dönüş izi (6, 7) daha açık
+const SAYDAMLIK = [1, 0.42, 0.42, 0.42, 0.42, 0.42, 0.62, 0.82];
 
 export function logoIsaret({ boyut = 32, zemin = true, acik = '#F5F3EE', rx = 15 } = {}) {
   const d = halkaDilimleri(32, 32, 20);
@@ -29,7 +30,7 @@ export function logoIsaret({ boyut = 32, zemin = true, acik = '#F5F3EE', rx = 15
   const okBasi = `${P(Math.cos(t) * u, Math.sin(t) * u)} ${P(Math.cos(ok.a) * u * 0.9, Math.sin(ok.a) * u * 0.9)} ${P(-Math.cos(ok.a) * u * 0.9, -Math.sin(ok.a) * u * 0.9)}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" class="logo-isaret" width="${boyut}" height="${boyut}" viewBox="0 0 64 64" aria-hidden="true">
     ${zemin ? `<rect width="64" height="64" rx="${rx}" fill="${RENK.murekkep}"/>` : ''}
-    ${d.map((s) => `<path d="${s.d}" fill="none" stroke="${s.i === 0 ? RENK.vurgu : acik}" stroke-opacity="${s.i === 0 ? 1 : SAYDAMLIK[s.i]}" stroke-width="5" stroke-linecap="butt"/>`).join('')}
+    ${d.map((s) => `<path d="${s.d}" fill="none" stroke="${s.i === 0 ? RENK.vurgu : acik}" stroke-opacity="${s.i === 0 ? 1 : SAYDAMLIK[s.i]}" stroke-width="5.6" stroke-linecap="butt"/>`).join('')}
     <polygon points="${okBasi}" fill="${RENK.vurgu}"/>
     <g fill="${acik}"><rect x="24" y="23" width="4.4" height="18"/><rect x="35.6" y="23" width="4.4" height="18"/><polygon points="24,23 28.6,23 40,41 35.4,41"/></g>
   </svg>`;

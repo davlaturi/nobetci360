@@ -92,6 +92,7 @@ const NOT_H = 22;
 export async function belgeSayfalari(belge, olcek = 2.4) {
   await fontlarHazir();
   const logo = await resimYukle(logoIsaret({ boyut: 64 }));
+  const logoSeffaf = await resimYukle(logoIsaret({ boyut: 64, zemin: false }));
 
   // ---- 1) sayfalara böl (yükseklik hesabı)
   const sayfalar = [[]];
@@ -136,7 +137,7 @@ export async function belgeSayfalari(belge, olcek = 2.4) {
     x.scale(olcek, olcek);
     x.textBaseline = 'middle';
     x.fillStyle = R.kagit; x.fillRect(0, 0, W, sh);
-    banta(x, belge, logo, si === 0, si + 1, toplam);
+    banta(x, belge, logoSeffaf, si === 0, si + 1, toplam);
     for (const b of sayfalar[si]) {
       if (b.tur === 'bolum') bolumCiz(x, b);
       else if (b.tur === 'tablo') tabloCiz(x, b);
@@ -185,12 +186,22 @@ function kapakZemini(x, h) {
   x.fillStyle = R.vurgu; x.fillRect(0, h, 120, 3);
 }
 
+// Marka: koyu bantta kaybolmasın diye logo, açık kenarlı kendi karesi içinde; yazı 17 pt, "360" açık kiremit
 function markaYaz(x, logo, y) {
-  if (logo) x.drawImage(logo, P, y - 15, 30, 30);
+  const k = 36, kx = P, ky = y - k / 2;
+  x.save();
+  x.shadowColor = 'rgba(0,0,0,0.35)'; x.shadowBlur = 8; x.shadowOffsetY = 2;
+  yuvarlak(x, kx, ky, k, k, 9);
+  const z = x.createLinearGradient(kx, ky, kx + k, ky + k);
+  z.addColorStop(0, '#24395A'); z.addColorStop(1, '#13223A');
+  x.fillStyle = z; x.fill();
+  x.restore();
+  yuvarlak(x, kx + 0.5, ky + 0.5, k - 1, k - 1, 9); x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 1; x.stroke();
+  if (logo) x.drawImage(logo, kx + 1, ky + 1, k - 2, k - 2);
   x.textAlign = 'left';
-  x.font = F(16, 600); x.fillStyle = '#fff'; x.fillText('Nöbetçi', P + 40, y);
+  x.font = F(17, 600); x.fillStyle = '#fff'; x.fillText('Nöbetçi', kx + k + 11, y + 0.5);
   const nw = x.measureText('Nöbetçi').width;
-  x.font = F(16, 700); x.fillStyle = R.vurgu; x.fillText('360', P + 40 + nw + 1, y);
+  x.font = F(17, 700); x.fillStyle = '#EE6A4F'; x.fillText('360', kx + k + 11 + nw + 1, y + 0.5);
 }
 
 // Okul adı rozeti: yarı saydam kapsül + kalkan simgesi + sıcak tonlu geçişli yazı
