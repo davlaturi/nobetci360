@@ -294,7 +294,7 @@ function gorevSayfasi(m) {
     const gorevSaat = {}; // id -> {saat: girilecek sınıf}
     for (const a of k.atamalar) if (a.gorevli) (gorevSaat[a.gorevli] ||= {})[a.saat] = a.sinif || '?';
     h += `<section class="bolum"><div class="bolum-bas"><h2>Günün nöbetçileri</h2></div>
-      <div class="lejant nobetci-lejant"><span><i class="l-bos"></i>Boş</span><span><i class="l-ders"></i>Kendi dersi</span><span><i class="l-gorev"></i>Görevli (gireceği sınıf)</span><span><i class="l-yok"></i>Okulda değil</span></div><div class="kart">`;
+      <div class="lejant nobetci-lejant"><span><i class="l-ders"></i>Kendi dersi var</span><span><i class="l-bos"></i>Boş saat</span><span><i class="l-gorev"></i>Görevli (gireceği sınıf)</span><span><i class="l-yok"></i>Okulda değil</span></div><div class="kart">`;
     for (const n of [...nobetciler].sort((a, b) => a.alan - b.alan)) {
       const o = M.ogretmen(durum, n.id);
       const gx = gelmeyen.get(n.id);

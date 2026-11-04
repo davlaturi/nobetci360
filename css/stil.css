@@ -351,15 +351,15 @@ textarea.alan { padding: 10px 12px; min-height: 96px; line-height: 1.5; }
 .saatler i { height: 40px; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-style: normal; font-variant-numeric: tabular-nums; border: 1px solid transparent; }
 .saatler i b { font-size: 12.5px; font-weight: 700; line-height: 1.1; }
 .saatler i small { font-size: 9.5px; font-weight: 600; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
-.saatler i.bos { background: var(--yesil-acik); color: var(--yesil); border-color: #C3E0D0; }
-.saatler i.ders { background: var(--kagit-2); color: var(--soluk); }
+.saatler i.bos { background: transparent; color: var(--soluk); border: 1.5px solid var(--cizgi-2); }
+.saatler i.ders { background: var(--yesil-acik); color: var(--yesil); border-color: #B9DCC8; }
 .saatler i.gorev { background: var(--murekkep); color: #fff; }
 .saatler i.gorev small { color: #FFB9A8; }
 .gorev-say { color: var(--murekkep); }
 .nobetci-lejant { margin: -2px 2px 10px; flex-wrap: wrap; gap: 6px 14px; }
 .nobetci-lejant i { width: 12px; height: 12px; border-radius: 3px; }
-.l-bos { background: var(--yesil-acik); border: 1px solid #C3E0D0; }
-.l-ders { background: var(--kagit-2); border: 1px solid var(--cizgi-2); }
+.l-bos { background: transparent; border: 1.5px solid var(--cizgi-2); }
+.l-ders { background: var(--yesil-acik); border: 1px solid #B9DCC8; }
 .l-gorev { background: var(--murekkep); }
 .l-yok { background: var(--vurgu-acik); border: 1px dashed var(--vurgu); }
 @media (max-width: 899px) { .nobetci { grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px 14px; } .saatler { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
