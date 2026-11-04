@@ -353,7 +353,7 @@ function gorevBelgesi() {
   const gorevSatir = sirali.map(([id, saatler]) => [
     id ? { ad: ad(id), bas: M.basHarfler(ogrAd(id)) } : { bos: true, ad: 'Görevli bulunamadı' },
     ...Array.from({ length: SAAT }, (_, i) => (saatler[i + 1] ? (id ? saatler[i + 1] : { metin: saatler[i + 1], acik: true }) : 0)),
-    Object.keys(saatler).length,
+    k.atamalar.filter((a) => (a.gorevli || '') === id).length, // ders sayısı (açıkta kalanlarda aynı saatte birden çok ders olabilir)
   ]);
   const acikta = k.atamalar.filter((a) => !a.gorevli).length;
 

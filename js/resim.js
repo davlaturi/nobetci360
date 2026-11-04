@@ -406,25 +406,43 @@ function hucre(x, k, h, my, sh) {
       }
       const m = typeof h === 'object' ? h.metin : h;
       const acik = typeof h === 'object' && h.acik;
-      x.font = F(12, 700);
-      const tw = Math.min(Math.max(x.measureText(m).width + 14, 42), k.g - 8);
       const cx = k.x + k.g / 2;
-      yuvarlak(x, cx - tw / 2, my - 11, tw, 22, 6);
+      // birden çok sınıf (birleşik ders ya da aynı saatte açıkta kalan dersler): iki satır, fazlası "+N"
+      const parca = String(m).split('/').map((p) => p.trim()).filter(Boolean);
+      const satir = parca.length <= 1 ? [String(m)] : [parca[0], parca.length === 2 ? parca[1] : `+${parca.length - 1} ders`];
+      const boy = satir.length > 1 ? 10.5 : 12;
+      x.font = F(boy, 700);
+      const tw = Math.min(Math.max(...satir.map((s) => x.measureText(s).width)) + 14, k.g - 8);
+      const th = satir.length > 1 ? 32 : 22;
+      yuvarlak(x, cx - Math.max(tw, 42) / 2, my - th / 2, Math.max(tw, 42), th, 6);
       if (acik) { x.fillStyle = R.vurguAcik; x.fill(); x.strokeStyle = R.vurgu; }
       else { x.fillStyle = R.murekkep; x.fill(); x.strokeStyle = R.murekkep; }
       x.lineWidth = 1; x.stroke();
       x.fillStyle = acik ? R.vurguKoyu : '#fff'; x.textAlign = 'center';
-      x.fillText(kisalt(x, m, tw - 8), cx, my + 0.5); x.textAlign = 'left';
+      if (satir.length > 1) {
+        x.fillText(kisalt(x, satir[0], tw - 6), cx, my - 6.5);
+        x.fillText(kisalt(x, satir[1], tw - 6), cx, my + 7.5);
+      } else x.fillText(kisalt(x, m, tw - 8), cx, my + 0.5);
+      x.textAlign = 'left';
       break;
     }
     case 'saatSinif': {
       // her ders bir kutucuk: koyu saat numarası + sınıf; sığmazsa ikinci satıra iner
       if (!Array.isArray(h)) { x.font = F(12, 400); x.fillStyle = R.soluk2; x.fillText(String(h), sol, my); break; }
-      const ch = 22, ara = 5;
-      x.font = F(11.5, 700);
-      const olc = h.map((d) => { x.font = F(11.5, 700); const nw = x.measureText(String(d.saat)).width; x.font = F(11.5, 600); return { ...d, nw, w: nw + x.measureText(d.sinif).width + 24 }; });
-      const satirlar = [[]]; let sw = 0;
-      for (const d of olc) { if (sw + d.w > gen + 10 && satirlar.at(-1).length) { satirlar.push([]); sw = 0; } satirlar.at(-1).push(d); sw += d.w + ara; }
+      const ara = 5;
+      const sinirGen = k.g - 26; // hücrenin sağ kenarına taşmasın
+      // önce normal boyutta dene; 2 satıra sığmazsa küçült
+      let ch, boy, olc, satirlar;
+      for ([ch, boy] of [[22, 11.5], [19, 10], [17, 9]]) {
+        olc = h.map((d) => {
+          const sinif = String(d.sinif).replace(/\s*\/\s*/g, '/');
+          x.font = F(boy, 700); const nw = x.measureText(String(d.saat)).width;
+          x.font = F(boy, 600); return { ...d, sinif, nw, w: nw + x.measureText(sinif).width + 24 };
+        });
+        satirlar = [[]]; let sw = 0;
+        for (const d of olc) { if (sw + d.w > sinirGen && satirlar.at(-1).length) { satirlar.push([]); sw = 0; } satirlar.at(-1).push(d); sw += d.w + ara; }
+        if (satirlar.length <= 2) break;
+      }
       const top = my - (satirlar.length * ch + (satirlar.length - 1) * ara) / 2;
       satirlar.forEach((sat, si) => {
         let cx = sol; const cy = top + si * (ch + ara);
@@ -433,8 +451,8 @@ function hucre(x, k, h, my, sh) {
           x.strokeStyle = R.cizgi2; x.lineWidth = 1; x.stroke();
           // saat numarası koyu kare içinde
           yuvarlak(x, cx + 2, cy + 2, d.nw + 10, ch - 4, 4); x.fillStyle = R.murekkep; x.fill();
-          x.font = F(11.5, 700); x.fillStyle = '#fff'; x.textAlign = 'center'; x.fillText(String(d.saat), cx + 2 + (d.nw + 10) / 2, cy + ch / 2 + 0.5);
-          x.font = F(11.5, 600); x.fillStyle = R.murekkep; x.textAlign = 'left'; x.fillText(d.sinif, cx + d.nw + 17, cy + ch / 2 + 0.5);
+          x.font = F(boy, 700); x.fillStyle = '#fff'; x.textAlign = 'center'; x.fillText(String(d.saat), cx + 2 + (d.nw + 10) / 2, cy + ch / 2 + 0.5);
+          x.font = F(boy, 600); x.fillStyle = R.murekkep; x.textAlign = 'left'; x.fillText(d.sinif, cx + d.nw + 17, cy + ch / 2 + 0.5);
           cx += d.w + ara;
         }
       });
