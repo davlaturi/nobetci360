@@ -189,30 +189,28 @@ function kapakZemini(x, h) {
 // Marka: koyu bantta kaybolmasın diye logo, açık kenarlı kendi karesi içinde; yazı 17 pt, "360" açık kiremit
 function markaYaz(x, logo, y) {
   const k = 36, kx = P, ky = y - k / 2;
-  // altından sızan neon ışık: karenin altında yayılıp sönen kiremit hale
+  // dört bir yanından dışarı sızan neon ışık: karenin çevresinde, yanlara doğru daha geniş yayılan kiremit hale
   x.save();
-  x.translate(kx + k / 2, ky + k);
-  x.scale(1.7, 0.75);
-  const hale = x.createRadialGradient(0, 0, 0, 0, 0, 30);
-  hale.addColorStop(0, 'rgba(255,110,80,0.55)');
-  hale.addColorStop(0.45, 'rgba(240,90,60,0.22)');
+  x.translate(kx + k / 2, ky + k / 2);
+  x.scale(1.75, 1.15);
+  const hale = x.createRadialGradient(0, 0, k * 0.32, 0, 0, 34);
+  hale.addColorStop(0, 'rgba(255,110,80,0.50)');
+  hale.addColorStop(0.5, 'rgba(240,90,60,0.18)');
   hale.addColorStop(1, 'rgba(217,72,43,0)');
-  x.fillStyle = hale; x.beginPath(); x.arc(0, 0, 30, 0, Math.PI * 2); x.fill();
+  x.fillStyle = hale; x.beginPath(); x.arc(0, 0, 34, 0, Math.PI * 2); x.fill();
   x.restore();
+  // kare: kenarlarından neon parıltı veren gölge
   x.save();
-  x.shadowColor = 'rgba(0,0,0,0.35)'; x.shadowBlur = 8; x.shadowOffsetY = 2;
+  x.shadowColor = 'rgba(255,95,65,0.75)'; x.shadowBlur = 14;
   yuvarlak(x, kx, ky, k, k, 9);
   const z = x.createLinearGradient(kx, ky, kx + k, ky + k);
   z.addColorStop(0, '#24395A'); z.addColorStop(1, '#13223A');
   x.fillStyle = z; x.fill();
   x.restore();
-  yuvarlak(x, kx + 0.5, ky + 0.5, k - 1, k - 1, 9); x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 1; x.stroke();
-  // alt kenarda ince neon çizgi (ortada parlak, uçlarda sönen)
+  // ince neon kenar: dört kenarda da sıcak, yumuşak ışık çizgisi
   x.save();
-  const cz = x.createLinearGradient(kx + 4, 0, kx + k - 4, 0);
-  cz.addColorStop(0, 'rgba(255,120,90,0)'); cz.addColorStop(0.5, 'rgba(255,150,120,0.95)'); cz.addColorStop(1, 'rgba(255,120,90,0)');
-  x.shadowColor = 'rgba(255,90,60,0.9)'; x.shadowBlur = 6;
-  x.fillStyle = cz; x.fillRect(kx + 4, ky + k - 1.2, k - 8, 1.4);
+  x.shadowColor = 'rgba(255,110,80,0.9)'; x.shadowBlur = 5;
+  yuvarlak(x, kx + 0.5, ky + 0.5, k - 1, k - 1, 9); x.strokeStyle = 'rgba(255,150,120,0.55)'; x.lineWidth = 1; x.stroke();
   x.restore();
   if (logo) x.drawImage(logo, kx + 1, ky + 1, k - 2, k - 2);
   x.textAlign = 'left';
