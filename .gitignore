@@ -3,3 +3,4 @@ node_modules/
 # Gerçek okul verisi ve öğretmen adı içeren dosyalar — herkese açık depoya gitmez
 test/
 araclar/gorsel-onizle.mjs
+kilavuz/

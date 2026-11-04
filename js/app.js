@@ -195,6 +195,11 @@ function gorevSayfasi(m) {
   else if (!nobetciler.length) notlar.push(['bilgi', 'Bu gün için tanımlı nöbetçi yok.']);
   for (const b of M.bosAlanlar(durum, ui.tarih, k)) notlar.push(['', `<b>${e(ad(b.id))}</b> gelmedi; <b>${e(G(durum.alanlar[b.alan]))}</b> nöbet alanı bugün boş.`]);
   if (acikta) notlar.push(['hata', `${acikta} derse o saatte boş nöbetçi bulunamadı. Listeden nöbetçi olmayan boş bir öğretmen seçebilirsin.`]);
+  // aylık yedek hatırlatması: kayıt varsa ve son yedek 30 günden eskiyse
+  const gecen = durum.sonYedek ? Math.round((M.tarihNesne(BUGUN()) - M.tarihNesne(durum.sonYedek)) / 864e5) : Infinity;
+  if (Object.keys(durum.kayitlar).length && gecen >= 30) {
+    notlar.push(['bilgi', `${durum.sonYedek ? `Son yedek ${gecen} gün önce alındı.` : 'Henüz yedek alınmadı.'} Telefon değişirse ya da uygulama silinirse kayıtlar kaybolmasın diye <a href="#" data-git="veri"><b>Veriler → Yedeği indir</b></a> ile yedek al.`]);
+  }
   h += notlar.map(([t, n]) => `<div class="not ${t}">${ikon(t === 'bilgi' ? 'saat' : 'uyari')}<div>${n}</div></div>`).join('');
 
   // gelmeyenler
@@ -750,6 +755,7 @@ function veriSayfasi(m) {
 
   // yedek
   $('#yedek-al').onclick = () => {
+    durum.sonYedek = BUGUN(); kaydet();
     const blob = new Blob([JSON.stringify(durum, null, 1)], { type: 'application/json' });
     paylasDosya(blob, `nobetci360-yedek-${BUGUN()}.json`, 'Nöbetçi360 yedeği');
   };
@@ -759,7 +765,7 @@ function veriSayfasi(m) {
     try {
       const v = M.yedekDogrula(JSON.parse(await f.text()));
       if (!confirm(`Yedekte ${v.ogretmenler.length} öğretmen ve ${Object.keys(v.kayitlar).length} günlük kayıt var. Bu cihazdaki veriler yedekle değiştirilsin mi?`)) return;
-      durum = v; kaydet(); iskelet(); veriSayfasi(m); mesaj('Yedek geri yüklendi.');
+      durum = v; durum.sonYedek = BUGUN(); kaydet(); iskelet(); veriSayfasi(m); mesaj('Yedek geri yüklendi.');
     } catch (err) { mesaj('Yedek okunamadı: ' + e(err.message), 'hata'); }
   };
   $('#hepsini-sil').onclick = () => {
